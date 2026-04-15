@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+
+.env
+**/.env
+
+sam-user-service/src/generated/
+sam-request-service/src/generated/
+sam-appointment-service/src/generated/
+
+.DS_Store

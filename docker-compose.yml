@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  sam-postgres:
+    image: postgres
+    container_name: sam-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 485485
+      POSTGRES_DB: sam_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - sam_postgres_data:/var/lib/postgresql/data
+
+  sam-pgadmin:
+    image: dpage/pgadmin4
+    container_name: sam-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@sam.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - sam-postgres
+
+volumes:
+  sam_postgres_data:

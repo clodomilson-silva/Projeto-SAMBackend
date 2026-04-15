@@ -1,0 +1,20 @@
+{
+  "name": "sam-backend",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "sam-gateway",
+    "sam-auth-service",
+    "sam-user-service",
+    "sam-request-service",
+    "sam-appointment-service"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "start:gateway": "npm --workspace sam-gateway run start:dev",
+    "start:auth": "npm --workspace sam-auth-service run start:dev",
+    "start:users": "npm --workspace sam-user-service run start:dev",
+    "start:requests": "npm --workspace sam-request-service run start:dev",
+    "start:appointments": "npm --workspace sam-appointment-service run start:dev"
+  }
+}

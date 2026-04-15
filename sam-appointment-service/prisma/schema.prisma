@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppointmentStatus {
+  AGENDADO
+  REALIZADO
+  CANCELADO
+}
+
+enum DossierStatus {
+  EM_ANDAMENTO
+  CONCLUIDO
+  ARQUIVADO
+}
+
+enum CourseType {
+  APRENDIZAGEM
+  TECNICO
+  QUALIFICACAO
+}
+
+enum RecordVisibility {
+  PRIVADO_PSICOLOGA
+  ADMINISTRATIVO
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  requestId      String            @map("request_id")
+  psychologistId String            @map("psychologist_id")
+  dossierId      String?           @map("dossier_id")
+  scheduledAt    DateTime          @map("scheduled_at")
+  location       String?
+  notes          String?
+  status         AppointmentStatus @default(AGENDADO)
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+  dossier        Dossier?          @relation(fields: [dossierId], references: [id], onDelete: SetNull)
+
+  @@index([requestId])
+  @@index([psychologistId])
+  @@index([dossierId])
+  @@map("appointments")
+}
+
+model Dossier {
+  id                  String           @id @default(uuid())
+  requestId           String           @unique @map("request_id")
+  psychologistId      String           @map("psychologist_id")
+  requestDate         DateTime         @map("request_date")
+  requesterName       String           @map("requester_name")
+  studentName         String           @map("student_name")
+  studentRegistration String           @map("student_registration")
+  classCode           String           @map("class_code")
+  courseType          CourseType       @map("course_type")
+  demandReport        String           @map("demand_report")
+  complaintTypologies String[]         @default([]) @map("complaint_typologies")
+  selectedActions     String[]         @default([]) @map("selected_actions")
+  pendingIssues       String?          @map("pending_issues")
+  status              DossierStatus    @default(EM_ANDAMENTO)
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+  appointments        Appointment[]
+  records             DossierRecord[]
+
+  @@index([psychologistId])
+  @@map("dossiers")
+}
+
+model DossierRecord {
+  id          String           @id @default(uuid())
+  dossierId   String           @map("dossier_id")
+  title       String
+  description String
+  optionTags  String[]         @default([]) @map("option_tags")
+  visibility  RecordVisibility @default(PRIVADO_PSICOLOGA)
+  createdBy   String           @map("created_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  dossier     Dossier          @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+
+  @@index([dossierId])
+  @@index([createdBy])
+  @@map("dossier_records")
+}

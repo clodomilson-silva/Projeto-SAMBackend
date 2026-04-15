@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RequestPriority {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+enum CourseType {
+  APRENDIZAGEM
+  TECNICO
+  QUALIFICACAO
+}
+
+enum RequestStatus {
+  PENDENTE
+  EM_ANALISE
+  EM_ATENDIMENTO
+  CONCLUIDA
+  INDEFERIDA
+  CANCELADA
+}
+
+model Request {
+  id                    String         @id @default(uuid())
+  protocolNumber        String         @unique @default(cuid()) @map("protocol_number")
+  requestDate           DateTime       @default(now()) @map("request_date")
+  requesterName         String         @map("requester_name")
+  studentName           String         @map("student_name")
+  studentRegistration   String         @map("student_registration")
+  classCode             String         @map("class_code")
+  courseType            CourseType     @map("course_type")
+  reason                String
+  priority              RequestPriority
+  status                RequestStatus  @default(PENDENTE)
+  requesterId           String         @map("requester_id")
+  targetPsychologistId  String?        @map("target_psychologist_id")
+  supervisorDescription String?        @map("supervisor_description")
+  psychologistConclusion String?       @map("psychologist_conclusion")
+  unitId                String?        @map("unit_id")
+  concludedAt           DateTime?      @map("concluded_at")
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+
+  @@map("requests")
+}
