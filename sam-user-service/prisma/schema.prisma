@@ -15,11 +15,27 @@ enum UserRole {
   GESTAO
 }
 
+enum WorkUnit {
+  NUTEC
+  CEP_SAO_LUIS
+  PA_COHAB
+  TIMON
+  BALSAS
+  CAXIAS
+  SANTA_INES
+  IMPERATRIZ
+  ACAILANDIA
+  BACABAL
+  PINHEIRO
+}
+
 model User {
   id              String        @id @default(uuid())
   name            String
   email           String        @unique
   role            UserRole
+  crp             String?       @unique
+  workUnit        WorkUnit?     @map("work_unit")
   passwordHash    String        @map("password_hash")
   active          Boolean       @default(true)
   lastLoginAt     DateTime?     @map("last_login_at")
