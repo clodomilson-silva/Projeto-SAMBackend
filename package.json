@@ -15,6 +15,12 @@
     "start:auth": "npm --workspace sam-auth-service run start:dev",
     "start:users": "npm --workspace sam-user-service run start:dev",
     "start:requests": "npm --workspace sam-request-service run start:dev",
-    "start:appointments": "npm --workspace sam-appointment-service run start:dev"
+    "start:appointments": "npm --workspace sam-appointment-service run start:dev",
+    "start:all": "concurrently -n users,auth,requests,appointments,gateway -c cyan,magenta,yellow,green,blue \"npm run start:users\" \"npm run start:auth\" \"npm run start:requests\" \"npm run start:appointments\" \"npm run start:gateway\"",
+    "dev:all": "npm run start:all",
+    "dev:backend": "npm run start:all"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
