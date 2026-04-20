@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosRequestConfig } from 'axios';
 
-type HttpMethod = 'get' | 'post' | 'patch';
+type HttpMethod = 'get' | 'post' | 'patch' | 'delete';
 
 @Injectable()
 export class ProxyService {

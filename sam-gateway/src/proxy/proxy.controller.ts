@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Param,
@@ -29,6 +30,20 @@ export class ProxyController {
     return this.proxyService.users('get', '/sam/users', undefined, token);
   }
 
+  @Patch('users/:id')
+  updateUser(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.users('patch', `/sam/users/${id}`, body, token);
+  }
+
+  @Delete('users/:id')
+  deleteUser(@Param('id') id: string, @Headers('authorization') token?: string) {
+    return this.proxyService.users('delete', `/sam/users/${id}`, undefined, token);
+  }
+
   @Post('requests')
   createRequest(@Body() body: unknown, @Headers('authorization') token?: string) {
     return this.proxyService.requests('post', '/sam/requests', body, token);
@@ -53,6 +68,20 @@ export class ProxyController {
     );
   }
 
+  @Patch('requests/:id')
+  updateRequest(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.requests('patch', `/sam/requests/${id}`, body, token);
+  }
+
+  @Delete('requests/:id')
+  deleteRequest(@Param('id') id: string, @Headers('authorization') token?: string) {
+    return this.proxyService.requests('delete', `/sam/requests/${id}`, undefined, token);
+  }
+
   @Post('appointments')
   createAppointment(
     @Body() body: unknown,
@@ -74,6 +103,25 @@ export class ProxyController {
       undefined,
       token,
     );
+  }
+
+  @Get('appointments/dashboard/psychologist')
+  psychologistDashboard(
+    @Headers('authorization') token?: string,
+    @Query('psychologistId') psychologistId?: string,
+    @Query('periodType') periodType?: string,
+    @Query('referenceDate') referenceDate?: string,
+  ) {
+    const query = new URLSearchParams();
+    if (psychologistId) query.set('psychologistId', psychologistId);
+    if (periodType) query.set('periodType', periodType);
+    if (referenceDate) query.set('referenceDate', referenceDate);
+
+    const path = `/sam/appointments/dashboard/psychologist${
+      query.toString() ? `?${query.toString()}` : ''
+    }`;
+
+    return this.proxyService.appointments('get', path, undefined, token);
   }
 
   @Patch('appointments/:id/status')
@@ -119,6 +167,40 @@ export class ProxyController {
     return this.proxyService.appointments(
       'get',
       `/sam/appointments/dossiers/request/${requestId}`,
+      undefined,
+      token,
+    );
+  }
+
+  @Get('appointments/dossiers/:id')
+  findDossierById(@Param('id') id: string, @Headers('authorization') token?: string) {
+    return this.proxyService.appointments(
+      'get',
+      `/sam/appointments/dossiers/${id}`,
+      undefined,
+      token,
+    );
+  }
+
+  @Patch('appointments/dossiers/:id')
+  updateDossier(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.appointments(
+      'patch',
+      `/sam/appointments/dossiers/${id}`,
+      body,
+      token,
+    );
+  }
+
+  @Delete('appointments/dossiers/:id')
+  deleteDossier(@Param('id') id: string, @Headers('authorization') token?: string) {
+    return this.proxyService.appointments(
+      'delete',
+      `/sam/appointments/dossiers/${id}`,
       undefined,
       token,
     );
