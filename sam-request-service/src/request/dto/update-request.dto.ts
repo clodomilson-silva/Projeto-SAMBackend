@@ -38,4 +38,8 @@ export class UpdateRequestDto {
   @IsOptional()
   @IsEnum(RequestStatus)
   status?: RequestStatus;
+
+  @IsOptional()
+  @IsString()
+  targetPsychologistId?: string | null;
 }

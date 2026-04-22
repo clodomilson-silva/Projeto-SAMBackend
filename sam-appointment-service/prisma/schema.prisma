@@ -55,6 +55,8 @@ model Dossier {
   requestId           String           @unique @map("request_id")
   psychologistId      String           @map("psychologist_id")
   requestDate         DateTime         @map("request_date")
+  attendanceStartDate DateTime?        @map("attendance_start_date")
+  attendanceEndDate   DateTime?        @map("attendance_end_date")
   requesterName       String           @map("requester_name")
   studentName         String           @map("student_name")
   studentRegistration String           @map("student_registration")

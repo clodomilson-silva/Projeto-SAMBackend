@@ -72,6 +72,10 @@ export class RequestService {
         priority: data.priority,
         supervisorDescription: data.demandDescription,
         status: data.status,
+        targetPsychologistId:
+          typeof data.targetPsychologistId === 'undefined'
+            ? undefined
+            : data.targetPsychologistId,
         concludedAt: nextStatus === RequestStatus.CONCLUIDA ? new Date() : null,
       },
     });

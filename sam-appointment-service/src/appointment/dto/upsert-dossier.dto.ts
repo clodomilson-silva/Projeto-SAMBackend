@@ -19,6 +19,14 @@ export class UpsertDossierDto {
   @IsDateString()
   requestDate!: string;
 
+  @IsDateString()
+  @IsOptional()
+  attendanceStartDate?: string;
+
+  @IsDateString()
+  @IsOptional()
+  attendanceEndDate?: string;
+
   @IsString()
   @IsNotEmpty()
   requesterName!: string;

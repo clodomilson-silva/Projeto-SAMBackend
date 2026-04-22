@@ -12,6 +12,14 @@ export class UpdateDossierDto {
   requestDate?: string;
 
   @IsOptional()
+  @IsDateString()
+  attendanceStartDate?: string | null;
+
+  @IsOptional()
+  @IsDateString()
+  attendanceEndDate?: string | null;
+
+  @IsOptional()
   @IsString()
   requesterName?: string;
 

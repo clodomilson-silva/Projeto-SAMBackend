@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import {
@@ -136,6 +136,10 @@ export class AppointmentService {
       update: {
         psychologistId: data.psychologistId,
         requestDate: new Date(data.requestDate),
+        attendanceStartDate: data.attendanceStartDate
+          ? new Date(data.attendanceStartDate)
+          : undefined,
+        attendanceEndDate: data.attendanceEndDate ? new Date(data.attendanceEndDate) : undefined,
         requesterName: data.requesterName,
         studentName: data.studentName,
         studentRegistration: data.studentRegistration,
@@ -151,6 +155,10 @@ export class AppointmentService {
         requestId: data.requestId,
         psychologistId: data.psychologistId,
         requestDate: new Date(data.requestDate),
+        attendanceStartDate: data.attendanceStartDate
+          ? new Date(data.attendanceStartDate)
+          : undefined,
+        attendanceEndDate: data.attendanceEndDate ? new Date(data.attendanceEndDate) : undefined,
         requesterName: data.requesterName,
         studentName: data.studentName,
         studentRegistration: data.studentRegistration,
@@ -197,13 +205,37 @@ export class AppointmentService {
   }
 
   async updateDossier(id: string, data: UpdateDossierDto) {
-    await this.findDossierById(id);
+    const existingDossier = await this.findDossierById(id);
+
+    const nextStatus = data.status ?? existingDossier.status;
+    const hasEndDateInPayload = typeof data.attendanceEndDate !== 'undefined';
+    const hasEndDateInCurrent = !!existingDossier.attendanceEndDate;
+
+    if (nextStatus === DossierStatus.CONCLUIDO && !hasEndDateInPayload && !hasEndDateInCurrent) {
+      throw new BadRequestException(
+        'Informe a data de encerramento para concluir o atendimento',
+      );
+    }
 
     return this.prisma.dossier.update({
       where: { id },
       data: {
         psychologistId: data.psychologistId,
         requestDate: data.requestDate ? new Date(data.requestDate) : undefined,
+        attendanceStartDate:
+          typeof data.attendanceStartDate === 'undefined'
+            ? undefined
+            : data.attendanceStartDate
+              ? new Date(data.attendanceStartDate)
+              : null,
+        attendanceEndDate:
+          typeof data.attendanceEndDate === 'undefined'
+            ? nextStatus === DossierStatus.CONCLUIDO && !hasEndDateInCurrent
+              ? new Date()
+              : undefined
+            : data.attendanceEndDate
+              ? new Date(data.attendanceEndDate)
+              : null,
         requesterName: data.requesterName,
         studentName: data.studentName,
         studentRegistration: data.studentRegistration,

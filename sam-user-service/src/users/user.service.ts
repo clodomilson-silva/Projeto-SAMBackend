@@ -42,7 +42,10 @@ export class UserService {
         email: data.email,
         role: data.role,
         crp: data.role === UserRole.PSICOLOGA_EDUCACIONAL ? data.crp : null,
-        workUnit: data.role === UserRole.SUPERVISAO ? data.workUnit : null,
+        workUnit:
+          data.role === UserRole.SUPERVISAO || data.role === UserRole.PSICOLOGA_EDUCACIONAL
+            ? (data.workUnit ?? null)
+            : null,
         passwordHash,
       },
       select: {
@@ -134,7 +137,7 @@ export class UserService {
         ? (data.crp ?? existingUser.crp ?? null)
         : null;
     updateData.workUnit =
-      targetRole === UserRole.SUPERVISAO
+      targetRole === UserRole.SUPERVISAO || targetRole === UserRole.PSICOLOGA_EDUCACIONAL
         ? ((data.workUnit ?? existingUser.workUnit ?? null) as
             | CreateUserDto['workUnit']
             | null)
