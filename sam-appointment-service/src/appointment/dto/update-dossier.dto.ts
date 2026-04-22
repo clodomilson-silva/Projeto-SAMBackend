@@ -44,6 +44,10 @@ export class UpdateDossierDto {
   demandReport?: string;
 
   @IsOptional()
+  @IsString()
+  annotations?: string | null;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   complaintTypologies?: string[];

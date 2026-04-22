@@ -50,6 +50,10 @@ export class UpsertDossierDto {
   @IsNotEmpty()
   demandReport!: string;
 
+  @IsString()
+  @IsOptional()
+  annotations?: string;
+
   @IsArray()
   @IsString({ each: true })
   @IsOptional()

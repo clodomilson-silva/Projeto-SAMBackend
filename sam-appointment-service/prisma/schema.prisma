@@ -63,6 +63,7 @@ model Dossier {
   classCode           String           @map("class_code")
   courseType          CourseType       @map("course_type")
   demandReport        String           @map("demand_report")
+  annotations         String?          @map("annotations")
   complaintTypologies String[]         @default([]) @map("complaint_typologies")
   selectedActions     String[]         @default([]) @map("selected_actions")
   pendingIssues       String?          @map("pending_issues")
