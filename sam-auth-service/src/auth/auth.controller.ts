@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { AuthService } from './auth.service';
 
@@ -7,7 +7,25 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  login(@Body() body: LoginDto) {
-    return this.authService.login(body.email, body.password);
+  login(@Body() body: LoginDto, @Req() req: any) {
+    const ipAddress = req.ip || req.headers?.['x-forwarded-for']?.toString();
+    const userAgent = req.headers?.['user-agent'];
+    return this.authService.login(body.email, body.password, ipAddress, userAgent);
+  }
+
+  @Post('refresh')
+  refresh(
+    @Body('userId') userId: string,
+    @Body('refreshToken') refreshToken: string,
+  ) {
+    return this.authService.refresh(userId, refreshToken);
+  }
+
+  @Post('logout')
+  logout(
+    @Body('userId') userId: string,
+    @Body('refreshToken') refreshToken: string,
+  ) {
+    return this.authService.logout(userId, refreshToken);
   }
 }

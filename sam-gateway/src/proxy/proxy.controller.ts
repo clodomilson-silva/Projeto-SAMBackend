@@ -20,6 +20,16 @@ export class ProxyController {
     return this.proxyService.auth('post', '/sam/auth/login', body);
   }
 
+  @Post('auth/refresh')
+  refresh(@Body() body: unknown) {
+    return this.proxyService.auth('post', '/sam/auth/refresh', body);
+  }
+
+  @Post('auth/logout')
+  logout(@Body() body: unknown) {
+    return this.proxyService.auth('post', '/sam/auth/logout', body);
+  }
+
   @Post('users')
   createUser(@Body() body: unknown, @Headers('authorization') token?: string) {
     return this.proxyService.users('post', '/sam/users', body, token);
