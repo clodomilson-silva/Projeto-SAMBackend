@@ -44,6 +44,49 @@ export class ProxyController {
     return this.proxyService.users('delete', `/sam/users/${id}`, undefined, token);
   }
 
+  @Post('users/notes')
+  createNote(@Body() body: unknown, @Headers('authorization') token?: string) {
+    return this.proxyService.users('post', '/sam/users/notes', body, token);
+  }
+
+  @Get('users/notes/request/:requestId')
+  findNotesByRequest(
+    @Param('requestId') requestId: string,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.users(
+      'get',
+      `/sam/users/notes/request/${requestId}`,
+      undefined,
+      token,
+    );
+  }
+
+  @Get('users/notes/:id')
+  findOneNote(
+    @Param('id') id: string,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.users('get', `/sam/users/notes/${id}`, undefined, token);
+  }
+
+  @Patch('users/notes/:id')
+  updateNote(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.users('patch', `/sam/users/notes/${id}`, body, token);
+  }
+
+  @Delete('users/notes/:id')
+  deleteNote(
+    @Param('id') id: string,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.users('delete', `/sam/users/notes/${id}`, undefined, token);
+  }
+
   @Post('requests')
   createRequest(@Body() body: unknown, @Headers('authorization') token?: string) {
     return this.proxyService.requests('post', '/sam/requests', body, token);
