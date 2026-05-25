@@ -248,4 +248,72 @@ export class ProxyController {
       token,
     );
   }
+
+  @Post('appointments/dossiers/:dossierId/records')
+  createRecord(
+    @Param('dossierId') dossierId: string,
+    @Body() body: unknown,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.appointments(
+      'post',
+      `/sam/appointments/dossiers/${dossierId}/records`,
+      body,
+      token,
+    );
+  }
+
+  @Get('appointments/dossiers/:dossierId/records')
+  findRecordsByDossier(
+    @Param('dossierId') dossierId: string,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.appointments(
+      'get',
+      `/sam/appointments/dossiers/${dossierId}/records`,
+      undefined,
+      token,
+    );
+  }
+
+  @Get('appointments/records/:id')
+  findOneRecord(
+    @Param('id') id: string,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.appointments(
+      'get',
+      `/sam/appointments/records/${id}`,
+      undefined,
+      token,
+    );
+  }
+
+  @Patch('appointments/records/:id')
+  updateRecord(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.appointments(
+      'patch',
+      `/sam/appointments/records/${id}`,
+      body,
+      token,
+    );
+  }
+
+  @Delete('appointments/records/:id')
+  deleteRecord(
+    @Param('id') id: string,
+    @Headers('authorization') token?: string,
+  ) {
+    return this.proxyService.appointments(
+      'delete',
+      `/sam/appointments/records/${id}`,
+      undefined,
+      token,
+    );
+  }
 }
+
