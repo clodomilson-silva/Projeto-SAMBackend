@@ -12,7 +12,7 @@ import { UpsertDossierDto } from './dto/upsert-dossier.dto';
 
 @Injectable()
 export class AppointmentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(data: CreateAppointmentDto) {
     return this.prisma.appointment.create({
@@ -69,6 +69,7 @@ export class AppointmentService {
           updatedAt: true,
           complaintTypologies: true,
           selectedActions: true,
+          status: true,
         },
       }),
     ]);
@@ -92,12 +93,12 @@ export class AppointmentService {
       }));
 
     const summary = {
-      totalAttendances: appointments.length,
-      completed: appointments.filter((item) => item.status === AppointmentStatus.REALIZADO)
+      totalAttendances: dossiers.length,
+      completed: dossiers.filter((item) => item.status === DossierStatus.CONCLUIDO)
         .length,
-      inProgress: appointments.filter((item) => item.status === AppointmentStatus.AGENDADO)
+      inProgress: dossiers.filter((item) => item.status === DossierStatus.EM_ANDAMENTO)
         .length,
-      cancelled: appointments.filter((item) => item.status === AppointmentStatus.CANCELADO)
+      cancelled: dossiers.filter((item) => item.status === DossierStatus.ARQUIVADO)
         .length,
       withPendingIssues: pendingAttendances.length,
     };
