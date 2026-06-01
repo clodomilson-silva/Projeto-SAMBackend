@@ -31,6 +31,18 @@ export class RequestService {
     });
   }
 
+  async findOne(id: string) {
+    const request = await this.prisma.request.findUnique({
+      where: { id },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Solicitação não encontrada');
+    }
+
+    return request;
+  }
+
   async updateStatus(id: string, data: UpdateRequestStatusDto) {
     const existingRequest = await this.prisma.request.findUnique({
       where: { id },

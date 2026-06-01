@@ -107,6 +107,11 @@ export class ProxyController {
     return this.proxyService.requests('get', '/sam/requests', undefined, token);
   }
 
+  @Get('requests/:id')
+  findOneRequest(@Param('id') id: string, @Headers('authorization') token?: string) {
+    return this.proxyService.requests('get', `/sam/requests/${id}`, undefined, token);
+  }
+
   @Patch('requests/:id/status')
   updateRequestStatus(
     @Param('id') id: string,
