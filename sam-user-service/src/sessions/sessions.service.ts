@@ -9,6 +9,9 @@ export class SessionsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateSessionDto) {
+    // Revoga todas as sessões ativas anteriores deste usuário para garantir login único por perfil
+    await this.revokeAllForUser(data.userId);
+
     const refreshTokenHash = await bcrypt.hash(data.refreshToken, 10);
 
     return this.prisma.authSession.create({
