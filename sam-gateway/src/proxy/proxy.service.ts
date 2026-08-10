@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosRequestConfig } from 'axios';
 
@@ -65,7 +65,20 @@ export class ProxyService {
       headers: token ? { Authorization: token } : undefined,
     };
 
-    const response = await axios.request<T>(config);
-    return response.data;
+    try {
+      const response = await axios.request<T>(config);
+      return response.data;
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw new HttpException(
+          error.response.data,
+          error.response.status,
+        );
+      }
+      throw new HttpException(
+        'Erro ao comunicar com o serviço interno',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

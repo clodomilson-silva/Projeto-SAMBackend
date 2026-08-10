@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsEmail,
   IsEnum,
   IsOptional,
@@ -38,4 +39,9 @@ export class UpdateUserDto {
   )
   @IsEnum(WorkUnit)
   workUnit?: WorkUnit | null;
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(WorkUnit, { each: true })
+  allowedUnits?: WorkUnit[] | null;
 }

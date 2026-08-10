@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -35,6 +36,8 @@ export class UserService {
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
+    const isActive = typeof data.active === 'boolean' ? data.active : false;
+    const initialStatus = isActive ? 'AUTORIZADO' : 'PENDENTE';
 
     return this.prisma.user.create({
       data: {
@@ -46,7 +49,10 @@ export class UserService {
           data.role === UserRole.SUPERVISAO || data.role === UserRole.PSICOLOGA_EDUCACIONAL
             ? (data.workUnit ?? null)
             : null,
+        allowedUnits: data.allowedUnits ?? [],
         passwordHash,
+        active: isActive,
+        status: initialStatus as any,
       },
       select: {
         id: true,
@@ -55,6 +61,11 @@ export class UserService {
         role: true,
         crp: true,
         workUnit: true,
+        allowedUnits: true,
+        active: true,
+        status: true,
+        mustChangePassword: true,
+        resetRequested: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -71,16 +82,170 @@ export class UserService {
         role: true,
         crp: true,
         workUnit: true,
+        allowedUnits: true,
+        active: true,
+        status: true,
+        mustChangePassword: true,
+        resetRequested: true,
         createdAt: true,
         updatedAt: true,
       },
     });
   }
 
-  async findByEmailForAuth(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
+  async findOne(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        crp: true,
+        workUnit: true,
+        allowedUnits: true,
+        active: true,
+        status: true,
+        mustChangePassword: true,
+        resetRequested: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    return user;
+  }
+
+  async findByEmailForAuth(email: string) {
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
+    return this.prisma.user.findFirst({
+      where: {
+        email: {
+          equals: normalizedEmail,
+          mode: 'insensitive',
+        },
+      },
+    });
+  }
+
+  async toggleAuthorize(id: string) {
+    const existingUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!existingUser) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    const isCurrentlyAuthorized = existingUser.active !== false && existingUser.status !== 'BLOQUEADO' && existingUser.status !== 'PENDENTE';
+    const newActive = !isCurrentlyAuthorized;
+    const newStatus = newActive ? 'AUTORIZADO' : 'BLOQUEADO';
+
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        active: newActive,
+        status: newStatus as any,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        active: true,
+        status: true,
+      },
+    });
+  }
+
+  async adminResetPassword(id: string) {
+    const existingUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!existingUser) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    if (existingUser.status === 'BLOQUEADO') {
+      throw new BadRequestException('Não é possível redefinir a senha de um usuário bloqueado.');
+    }
+
+    const tempPassword = this.generateRandomPassword();
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        passwordHash,
+        mustChangePassword: true,
+        resetRequested: false,
+      },
+    });
+
+    return {
+      message: 'Senha resetada com sucesso',
+      temporaryPassword: tempPassword,
+    };
+  }
+
+  async requestReset(email: string) {
+    const existingUser = await this.prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      if (existingUser.status === 'BLOQUEADO') {
+        throw new ForbiddenException({
+          code: 'USER_BLOCKED',
+          message: 'O seu acesso ao sistema foi bloqueado. Por favor, entre em contato com o Administrador ou Psicólogo(a).',
+        });
+      }
+      await this.prisma.user.update({
+        where: { id: existingUser.id },
+        data: { resetRequested: true },
+      });
+    }
+    return { message: 'Solicitação registrada com sucesso' };
+  }
+
+  async resetPasswordByUser(data: { email: string; newPassword: string }) {
+    const existingUser = await this.prisma.user.findUnique({ where: { email: data.email } });
+    if (!existingUser) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+    if (existingUser.status === 'BLOQUEADO') {
+      throw new ForbiddenException({
+        code: 'USER_BLOCKED',
+        message: 'O seu acesso ao sistema foi bloqueado. Por favor, entre em contato com o Administrador ou Psicólogo(a).',
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(data.newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        passwordHash,
+        mustChangePassword: false,
+        resetRequested: false,
+      },
+    });
+
+    return { message: 'Senha redefinida com sucesso' };
+  }
+
+  private generateRandomPassword(): string {
+    const uppers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowers = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const first = uppers[Math.floor(Math.random() * uppers.length)];
+    let rest =
+      lowers[Math.floor(Math.random() * lowers.length)] +
+      numbers[Math.floor(Math.random() * numbers.length)];
+    const all = uppers + lowers + numbers;
+    for (let i = 0; i < 5; i++) {
+      rest += all[Math.floor(Math.random() * all.length)];
+    }
+    const shuffled = rest
+      .split('')
+      .sort(() => Math.random() - 0.5)
+      .join('');
+    return first + shuffled;
   }
 
   async update(id: string, data: UpdateUserDto) {
@@ -122,6 +287,7 @@ export class UserService {
       role?: UserRole;
       crp?: string | null;
       workUnit?: UpdateUserDto['workUnit'];
+      allowedUnits?: any;
       passwordHash?: string;
     } = {};
 
@@ -130,6 +296,9 @@ export class UserService {
     if (typeof data.role !== 'undefined') updateData.role = data.role;
     if (typeof data.password !== 'undefined') {
       updateData.passwordHash = await bcrypt.hash(data.password, 10);
+    }
+    if (typeof data.allowedUnits !== 'undefined') {
+      updateData.allowedUnits = (data.allowedUnits ?? []).filter(Boolean);
     }
 
     updateData.crp =
@@ -153,6 +322,10 @@ export class UserService {
         role: true,
         crp: true,
         workUnit: true,
+        allowedUnits: true,
+        active: true,
+        mustChangePassword: true,
+        resetRequested: true,
         createdAt: true,
         updatedAt: true,
       },

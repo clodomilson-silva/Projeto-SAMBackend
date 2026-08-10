@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, HttpException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -16,6 +16,11 @@ interface ValidateRotateResponse {
     name: string;
     email: string;
     role: string;
+    crp?: string | null;
+    workUnit?: string | null;
+    allowedUnits?: string[];
+    active?: boolean;
+    mustChangePassword?: boolean;
   };
 }
 
@@ -39,7 +44,8 @@ export class AuthService {
   }
 
   async login(email: string, password: string, ipAddress?: string, userAgent?: string) {
-    const user = await this.fetchUserByEmail(email);
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
+    const user = await this.fetchUserByEmail(normalizedEmail);
 
     if (!user) {
       throw new UnauthorizedException('Credenciais inválidas');
@@ -48,6 +54,20 @@ export class AuthService {
     const validPassword = await bcrypt.compare(password, user.passwordHash);
     if (!validPassword) {
       throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    if (user.status === 'BLOQUEADO') {
+      throw new UnauthorizedException({
+        code: 'USER_BLOCKED',
+        message: 'O seu acesso ao sistema foi bloqueado. Por favor, entre em contato com o Administrador ou Psicólogo(a).',
+      });
+    }
+
+    if (user.active === false || user.status === 'PENDENTE') {
+      throw new UnauthorizedException({
+        code: 'PENDING_APPROVAL',
+        message: 'A sua solicitação de cadastro ainda está pendente de liberação pelo Administrador ou Psicólogo(a).',
+      });
     }
 
     const tokenPayload = {
@@ -82,8 +102,58 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role,
+        crp: user.crp,
+        workUnit: user.workUnit,
+        allowedUnits: user.allowedUnits ?? [],
+        active: user.active,
+        mustChangePassword: user.mustChangePassword ?? false,
       },
     };
+  }
+
+  async register(data: any) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.userServiceUrl}/sam/users`, {
+          ...data,
+          active: false,
+        }),
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response) {
+        throw new HttpException(error.response.data, error.response.status);
+      }
+      throw error;
+    }
+  }
+
+  async requestReset(email: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.userServiceUrl}/sam/users/request-reset`, { email }),
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response) {
+        throw new HttpException(error.response.data, error.response.status);
+      }
+      throw error;
+    }
+  }
+
+  async resetPassword(data: any) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.userServiceUrl}/sam/users/reset-password`, data),
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response) {
+        throw new HttpException(error.response.data, error.response.status);
+      }
+      throw error;
+    }
   }
 
   async refresh(userId: string, refreshToken: string) {
@@ -124,6 +194,11 @@ export class AuthService {
           name: user.name,
           email: user.email,
           role: user.role,
+          crp: user.crp,
+          workUnit: user.workUnit,
+          allowedUnits: user.allowedUnits ?? [],
+          active: user.active,
+          mustChangePassword: user.mustChangePassword ?? false,
         },
       };
     } catch (error) {

@@ -8,12 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum RequestPriority {
-  BAIXA
-  MEDIA
-  ALTA
-}
-
 enum CourseType {
   APRENDIZAGEM
   TECNICO
@@ -31,15 +25,15 @@ enum RequestStatus {
 
 model Request {
   id                    String         @id @default(uuid())
-  protocolNumber        String         @unique @default(cuid()) @map("protocol_number")
+  protocolNumber        String         @unique @map("protocol_number")
   requestDate           DateTime       @default(now()) @map("request_date")
   requesterName         String         @map("requester_name")
   studentName           String         @map("student_name")
   studentRegistration   String         @map("student_registration")
   classCode             String         @map("class_code")
   courseType            CourseType     @map("course_type")
+  courseName            String?        @map("course_name")
   reason                String
-  priority              RequestPriority
   status                RequestStatus  @default(PENDENTE)
   requesterId           String         @map("requester_id")
   targetPsychologistId  String?        @map("target_psychologist_id")

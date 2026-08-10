@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateDossierRecordDto } from './dto/create-record.dto';
+import { CreateDossierRecordDto, RecordVisibility } from './dto/create-record.dto';
 import { UpdateDossierRecordDto } from './dto/update-record.dto';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class RecordsService {
         title: data.title,
         description: data.description,
         optionTags: data.optionTags ?? [],
-        visibility: data.visibility,
+        visibility: RecordVisibility.PRIVADO_PSICOLOGA,
         createdBy: data.createdBy,
       },
     });
@@ -70,7 +70,7 @@ export class RecordsService {
         title: data.title,
         description: data.description,
         optionTags: data.optionTags,
-        visibility: data.visibility,
+        visibility: RecordVisibility.PRIVADO_PSICOLOGA,
       },
     });
   }

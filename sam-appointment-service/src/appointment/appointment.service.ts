@@ -9,6 +9,7 @@ import { DossierStatus } from './dto/update-dossier-status.dto';
 import { UpdateDossierDto } from './dto/update-dossier.dto';
 import { AppointmentStatus } from './dto/update-appointment-status.dto';
 import { UpsertDossierDto } from './dto/upsert-dossier.dto';
+import { ReopenDossierDto } from './dto/reopen-dossier.dto';
 
 @Injectable()
 export class AppointmentService {
@@ -82,7 +83,7 @@ export class AppointmentService {
     );
 
     const pendingAttendances = dossiers
-      .filter((item) => item.pendingIssues && item.pendingIssues.trim() !== '')
+      .filter((item) => item.status === DossierStatus.EM_ANDAMENTO)
       .map((item) => ({
         dossierId: item.id,
         requestId: item.requestId,
@@ -93,12 +94,12 @@ export class AppointmentService {
       }));
 
     const summary = {
-      totalAttendances: dossiers.length,
-      completed: dossiers.filter((item) => item.status === DossierStatus.CONCLUIDO)
+      totalAttendances: appointments.length,
+      scheduled: appointments.filter((item) => item.status === AppointmentStatus.AGENDADO)
         .length,
-      inProgress: dossiers.filter((item) => item.status === DossierStatus.EM_ANDAMENTO)
+      realized: appointments.filter((item) => item.status === AppointmentStatus.REALIZADO)
         .length,
-      cancelled: dossiers.filter((item) => item.status === DossierStatus.ARQUIVADO)
+      cancelled: appointments.filter((item) => item.status === AppointmentStatus.CANCELADO)
         .length,
       withPendingIssues: pendingAttendances.length,
     };
@@ -132,6 +133,7 @@ export class AppointmentService {
   }
 
   async upsertDossier(data: UpsertDossierDto) {
+    await this.validateDossierRelations(data.complaintTypologies, data.selectedActions);
     return this.prisma.dossier.upsert({
       where: { requestId: data.requestId },
       update: {
@@ -146,11 +148,13 @@ export class AppointmentService {
         studentRegistration: data.studentRegistration,
         classCode: data.classCode,
         courseType: data.courseType,
+        courseName: data.courseName,
         demandReport: data.demandReport,
         annotations: data.annotations,
         complaintTypologies: data.complaintTypologies ?? [],
         selectedActions: data.selectedActions ?? [],
         pendingIssues: data.pendingIssues,
+        priority: data.priority ?? 'Não informado',
         status: data.status ?? DossierStatus.EM_ANDAMENTO,
       },
       create: {
@@ -159,18 +163,20 @@ export class AppointmentService {
         requestDate: new Date(data.requestDate),
         attendanceStartDate: data.attendanceStartDate
           ? new Date(data.attendanceStartDate)
-          : undefined,
+          : new Date(),
         attendanceEndDate: data.attendanceEndDate ? new Date(data.attendanceEndDate) : undefined,
         requesterName: data.requesterName,
         studentName: data.studentName,
         studentRegistration: data.studentRegistration,
         classCode: data.classCode,
         courseType: data.courseType,
+        courseName: data.courseName,
         demandReport: data.demandReport,
         annotations: data.annotations,
         complaintTypologies: data.complaintTypologies ?? [],
         selectedActions: data.selectedActions ?? [],
         pendingIssues: data.pendingIssues,
+        priority: data.priority ?? 'Não informado',
         status: data.status ?? DossierStatus.EM_ANDAMENTO,
       },
     });
@@ -179,6 +185,11 @@ export class AppointmentService {
   async findDossiers(psychologistId?: string) {
     return this.prisma.dossier.findMany({
       where: psychologistId ? { psychologistId } : undefined,
+      include: {
+        reopenHistories: {
+          orderBy: { reopenedAt: 'desc' },
+        },
+      },
       orderBy: { updatedAt: 'desc' },
     });
   }
@@ -198,6 +209,11 @@ export class AppointmentService {
   async findDossierById(id: string) {
     const dossier = await this.prisma.dossier.findUnique({
       where: { id },
+      include: {
+        reopenHistories: {
+          orderBy: { reopenedAt: 'desc' },
+        },
+      },
     });
 
     if (!dossier) {
@@ -208,17 +224,11 @@ export class AppointmentService {
   }
 
   async updateDossier(id: string, data: UpdateDossierDto) {
+    await this.validateDossierRelations(data.complaintTypologies, data.selectedActions);
     const existingDossier = await this.findDossierById(id);
 
     const nextStatus = data.status ?? existingDossier.status;
-    const hasEndDateInPayload = typeof data.attendanceEndDate !== 'undefined';
     const hasEndDateInCurrent = !!existingDossier.attendanceEndDate;
-
-    if (nextStatus === DossierStatus.CONCLUIDO && !hasEndDateInPayload && !hasEndDateInCurrent) {
-      throw new BadRequestException(
-        'Informe a data de encerramento para concluir o atendimento',
-      );
-    }
 
     return this.prisma.dossier.update({
       where: { id },
@@ -244,11 +254,13 @@ export class AppointmentService {
         studentRegistration: data.studentRegistration,
         classCode: data.classCode,
         courseType: data.courseType,
+        courseName: data.courseName,
         demandReport: data.demandReport,
         annotations: typeof data.annotations === 'undefined' ? undefined : data.annotations,
         complaintTypologies: data.complaintTypologies,
         selectedActions: data.selectedActions,
         pendingIssues: typeof data.pendingIssues === 'undefined' ? undefined : data.pendingIssues,
+        priority: data.priority,
         status: data.status,
       },
     });
@@ -258,6 +270,38 @@ export class AppointmentService {
     await this.findDossierById(id);
     await this.prisma.dossier.delete({ where: { id } });
     return { message: 'Dossiê removido com sucesso' };
+  }
+
+  async reopenDossier(id: string, data: ReopenDossierDto) {
+    const dossier = await this.prisma.dossier.findUnique({
+      where: { id },
+    });
+
+    if (!dossier) {
+      throw new NotFoundException('Dossiê não encontrado');
+    }
+
+    if (dossier.status !== 'CONCLUIDO') {
+      throw new BadRequestException('Apenas dossiês concluídos podem ser reabertos');
+    }
+
+    await this.prisma.dossier.update({
+      where: { id },
+      data: {
+        status: 'EM_ANDAMENTO',
+        attendanceEndDate: null,
+      },
+    });
+
+    await (this.prisma as any).dossierReopenHistory.create({
+      data: {
+        dossierId: id,
+        reason: data.reason,
+        createdBy: data.createdBy,
+      },
+    });
+
+    return this.findDossierById(id);
   }
 
   private resolvePeriod(periodType: DashboardPeriodType, referenceDate?: string) {
@@ -294,5 +338,41 @@ export class AppointmentService {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
+  }
+
+  private async validateDossierRelations(complaintTypologies?: string[], selectedActions?: string[]) {
+    if (complaintTypologies && complaintTypologies.length > 0) {
+      const activeComplaints = await this.prisma.complaintType.findMany({
+        where: {
+          name: { in: complaintTypologies },
+        },
+        select: { name: true },
+      });
+      const activeNames = activeComplaints.map((c) => c.name);
+      const invalid = complaintTypologies.filter((name) => !activeNames.includes(name));
+      if (invalid.length > 0) {
+        await this.prisma.complaintType.createMany({
+          data: invalid.map((name) => ({ name })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    if (selectedActions && selectedActions.length > 0) {
+      const activeActions = await this.prisma.actionType.findMany({
+        where: {
+          name: { in: selectedActions },
+        },
+        select: { name: true },
+      });
+      const activeNames = activeActions.map((a) => a.name);
+      const invalid = selectedActions.filter((name) => !activeNames.includes(name));
+      if (invalid.length > 0) {
+        await this.prisma.actionType.createMany({
+          data: invalid.map((name) => ({ name })),
+          skipDuplicates: true,
+        });
+      }
+    }
   }
 }

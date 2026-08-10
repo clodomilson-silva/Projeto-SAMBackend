@@ -1,10 +1,5 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-
-export enum RequestPriority {
-  BAIXA = 'BAIXA',
-  MEDIA = 'MEDIA',
-  ALTA = 'ALTA',
-}
+import { RequestStatus } from './update-request-status.dto';
 
 export enum CourseType {
   APRENDIZAGEM = 'APRENDIZAGEM',
@@ -33,15 +28,17 @@ export class CreateRequestDto {
   @IsNotEmpty()
   classCode!: string;
 
-  @IsEnum(CourseType)
-  courseType!: CourseType;
+  @IsString()
+  @IsNotEmpty()
+  courseType!: string;
+
+  @IsString()
+  @IsOptional()
+  courseName?: string;
 
   @IsString()
   @IsOptional()
   demandDescription?: string;
-
-  @IsEnum(RequestPriority)
-  priority!: RequestPriority;
 
   @IsString()
   @IsNotEmpty()
@@ -50,4 +47,8 @@ export class CreateRequestDto {
   @IsString()
   @IsOptional()
   unitId?: string;
+
+  @IsEnum(RequestStatus)
+  @IsOptional()
+  status?: RequestStatus;
 }

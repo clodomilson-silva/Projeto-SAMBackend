@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { UpdateRequestStatusDto } from './dto/update-request-status.dto';
@@ -14,8 +14,30 @@ export class RequestController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(
+    @Query('userRole') userRole?: string,
+    @Query('userWorkUnit') userWorkUnit?: string,
+    @Query('userAllowedUnits') userAllowedUnits?: string | string[],
+    @Query('userId') userId?: string,
+  ) {
+    const allowedUnitsArray = typeof userAllowedUnits === 'string' 
+      ? userAllowedUnits.split(',').map(s => s.trim()).filter(Boolean)
+      : (Array.isArray(userAllowedUnits) ? userAllowedUnits : []);
+
+    return this.service.findAll(userRole, userWorkUnit, allowedUnitsArray, userId);
+  }
+
+  @Get('notifications')
+  getNotifications(
+    @Query('psychologistId') psychologistId: string,
+    @Query('userWorkUnit') userWorkUnit?: string,
+    @Query('userAllowedUnits') userAllowedUnits?: string | string[],
+  ) {
+    const allowedUnitsArray = typeof userAllowedUnits === 'string'
+      ? userAllowedUnits.split(',').map(s => s.trim()).filter(Boolean)
+      : (Array.isArray(userAllowedUnits) ? userAllowedUnits : []);
+
+    return this.service.getNotifications(psychologistId, userWorkUnit, allowedUnitsArray);
   }
 
   @Get(':id')

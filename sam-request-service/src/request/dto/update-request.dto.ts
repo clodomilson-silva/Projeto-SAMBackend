@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { CourseType, RequestPriority } from './create-request.dto';
+import { CourseType } from './create-request.dto';
 import { RequestStatus } from './update-request-status.dto';
 
 export class UpdateRequestDto {
@@ -20,8 +20,12 @@ export class UpdateRequestDto {
   classCode?: string;
 
   @IsOptional()
-  @IsEnum(CourseType)
-  courseType?: CourseType;
+  @IsString()
+  courseType?: string;
+
+  @IsOptional()
+  @IsString()
+  courseName?: string;
 
   @IsOptional()
   @IsString()
@@ -30,10 +34,6 @@ export class UpdateRequestDto {
   @IsOptional()
   @IsString()
   demandDescription?: string;
-
-  @IsOptional()
-  @IsEnum(RequestPriority)
-  priority?: RequestPriority;
 
   @IsOptional()
   @IsEnum(RequestStatus)

@@ -1,7 +1,10 @@
 import {
+  IsArray,
+  IsBoolean,
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MinLength,
   ValidateIf,
@@ -12,6 +15,7 @@ export enum UserRole {
   PSICOLOGA_EDUCACIONAL = 'PSICOLOGA_EDUCACIONAL',
   SUPERVISAO = 'SUPERVISAO',
   GESTAO = 'GESTAO',
+  PROFESSOR = 'PROFESSOR',
 }
 
 export enum WorkUnit {
@@ -51,4 +55,13 @@ export class CreateUserDto {
   @ValidateIf((dto: CreateUserDto) => dto.role === UserRole.SUPERVISAO)
   @IsEnum(WorkUnit)
   workUnit?: WorkUnit;
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(WorkUnit, { each: true })
+  allowedUnits?: WorkUnit[];
+
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
 }

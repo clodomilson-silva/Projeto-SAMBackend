@@ -71,4 +71,12 @@ export class UpsertDossierDto {
   @IsEnum(DossierStatus)
   @IsOptional()
   status?: DossierStatus;
+
+  @IsString()
+  @IsOptional()
+  courseName?: string;
+
+  @IsString()
+  @IsOptional()
+  priority?: string;
 }

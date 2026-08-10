@@ -16,9 +16,13 @@
     "start:users": "npm --workspace sam-user-service run start:dev",
     "start:requests": "npm --workspace sam-request-service run start:dev",
     "start:appointments": "npm --workspace sam-appointment-service run start:dev",
+    "clean:ports": "npx -y kill-port 3000 3001 3002 3003 3004",
+    "prestart:all": "npm run clean:ports",
+    "predev:all": "npm run clean:ports",
     "start:all": "concurrently -n users,auth,requests,appointments,gateway -c cyan,magenta,yellow,green,blue \"npm run start:users\" \"npm run start:auth\" \"npm run start:requests\" \"npm run start:appointments\" \"npm run start:gateway\"",
     "dev:all": "npm run start:all",
-    "dev:backend": "npm run start:all"
+    "dev:backend": "npm run start:all",
+    "seed:admin": "npm --workspace sam-user-service run seed"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

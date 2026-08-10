@@ -1,4 +1,4 @@
-import { IsArray, IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDateString, IsEnum, IsOptional, IsString, ValidateIf } from 'class-validator';
 import { DossierStatus } from './update-dossier-status.dto';
 import { CourseType } from './upsert-dossier.dto';
 
@@ -8,14 +8,17 @@ export class UpdateDossierDto {
   psychologistId?: string;
 
   @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined && val !== '')
   @IsDateString()
   requestDate?: string;
 
   @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined && val !== '')
   @IsDateString()
   attendanceStartDate?: string | null;
 
   @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined && val !== '')
   @IsDateString()
   attendanceEndDate?: string | null;
 
@@ -44,6 +47,7 @@ export class UpdateDossierDto {
   demandReport?: string;
 
   @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined)
   @IsString()
   annotations?: string | null;
 
@@ -58,10 +62,20 @@ export class UpdateDossierDto {
   selectedActions?: string[];
 
   @IsOptional()
+  @ValidateIf((_, val) => val !== null && val !== undefined)
   @IsString()
   pendingIssues?: string | null;
 
   @IsOptional()
   @IsEnum(DossierStatus)
   status?: DossierStatus;
+
+  @IsOptional()
+  @IsString()
+  courseName?: string;
+
+  @IsOptional()
+  @IsString()
+  priority?: string;
 }
+

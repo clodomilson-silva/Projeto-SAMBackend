@@ -21,6 +21,21 @@ export class AuthController {
     return this.authService.refresh(userId, refreshToken);
   }
 
+  @Post('register')
+  register(@Body() body: any) {
+    return this.authService.register(body);
+  }
+
+  @Post('request-reset')
+  requestReset(@Body('email') email: string) {
+    return this.authService.requestReset(email);
+  }
+
+  @Post('reset-password')
+  resetPassword(@Body() body: any) {
+    return this.authService.resetPassword(body);
+  }
+
   @Post('logout')
   logout(
     @Body('userId') userId: string,

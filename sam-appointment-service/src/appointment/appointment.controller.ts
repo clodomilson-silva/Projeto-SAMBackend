@@ -5,6 +5,7 @@ import { UpdateDossierDto } from './dto/update-dossier.dto';
 import { UpsertDossierDto } from './dto/upsert-dossier.dto';
 import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto';
 import { AppointmentService } from './appointment.service';
+import { ReopenDossierDto } from './dto/reopen-dossier.dto';
 
 @Controller('sam/appointments')
 export class AppointmentController {
@@ -56,6 +57,11 @@ export class AppointmentController {
   @Patch('dossiers/:id')
   updateDossier(@Param('id') id: string, @Body() body: UpdateDossierDto) {
     return this.service.updateDossier(id, body);
+  }
+
+  @Post('dossiers/:id/reopen')
+  reopenDossier(@Param('id') id: string, @Body() body: ReopenDossierDto) {
+    return this.service.reopenDossier(id, body);
   }
 
   @Delete('dossiers/:id')

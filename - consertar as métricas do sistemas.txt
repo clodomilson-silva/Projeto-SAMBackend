@@ -1,0 +1,20 @@
+- consertar as métricas do sistemas nos dashboards
+- direcionar a aceitação do atendimento imediatamente para a página do dossiê
+- implementar o cadastro para professores para posterior encaminhamento pelos supervisores
+- retirar o nível de prioridade do atendimento
+- acrescentar o preenchimento do nome do curso
+- mudar o dado para o registro do protocolo
+- gerenciamento de nome de queixas
+- gerenciamento de ações a serem realizadas
+- notificação de cadastro de atendimentos para a psicóloga
+- reabertura de dossiês
+- evolução de dossiês
+- acrescentar intervenção coletiva (eventos)
+  - preenchimento de:
+    - tema/demanda
+    - código da turma
+    - curso
+    - instrutor
+    - data
+    - pessoas presentes (depois da ação)
+    - relato da ação (depois da ação)

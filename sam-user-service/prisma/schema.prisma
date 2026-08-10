@@ -13,6 +13,13 @@ enum UserRole {
   PSICOLOGA_EDUCACIONAL
   SUPERVISAO
   GESTAO
+  PROFESSOR
+}
+
+enum UserStatus {
+  PENDENTE
+  AUTORIZADO
+  BLOQUEADO
 }
 
 enum WorkUnit {
@@ -36,8 +43,12 @@ model User {
   role            UserRole
   crp             String?       @unique
   workUnit        WorkUnit?     @map("work_unit")
+  allowedUnits    WorkUnit[]    @default([]) @map("allowed_units")
   passwordHash    String        @map("password_hash")
-  active          Boolean       @default(true)
+  active          Boolean       @default(false)
+  status          UserStatus    @default(PENDENTE)
+  mustChangePassword Boolean    @default(false) @map("must_change_password")
+  resetRequested  Boolean       @default(false) @map("reset_requested")
   lastLoginAt     DateTime?     @map("last_login_at")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")

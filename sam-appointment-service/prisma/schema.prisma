@@ -62,19 +62,34 @@ model Dossier {
   studentRegistration String           @map("student_registration")
   classCode           String           @map("class_code")
   courseType          CourseType       @map("course_type")
+  courseName          String?          @map("course_name")
   demandReport        String           @map("demand_report")
   annotations         String?          @map("annotations")
   complaintTypologies String[]         @default([]) @map("complaint_typologies")
   selectedActions     String[]         @default([]) @map("selected_actions")
   pendingIssues       String?          @map("pending_issues")
+  priority            String?          @default("Não informado")
   status              DossierStatus    @default(EM_ANDAMENTO)
   createdAt           DateTime         @default(now()) @map("created_at")
   updatedAt           DateTime         @updatedAt @map("updated_at")
   appointments        Appointment[]
   records             DossierRecord[]
+  reopenHistories     DossierReopenHistory[]
 
   @@index([psychologistId])
   @@map("dossiers")
+}
+
+model DossierReopenHistory {
+  id         String   @id @default(uuid())
+  dossierId  String   @map("dossier_id")
+  reason     String
+  createdBy  String?  @map("created_by")
+  reopenedAt DateTime @default(now()) @map("reopened_at")
+  dossier    Dossier  @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+
+  @@index([dossierId])
+  @@map("dossier_reopen_histories")
 }
 
 model DossierRecord {
@@ -93,3 +108,96 @@ model DossierRecord {
   @@index([createdBy])
   @@map("dossier_records")
 }
+
+model ComplaintType {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("complaint_types")
+}
+
+model ActionType {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("action_types")
+}
+
+model CollectiveIntervention {
+  id            String   @id @default(uuid())
+  theme         String
+  classCode     String?  @map("class_code")
+  course        String?
+  targetAudience String[] @default([]) @map("target_audience")
+  unitId        String?  @map("unit_id")
+  unit          String?
+  instructor    String
+  date          DateTime
+  eventTime     String?  @map("event_time")
+  presentPeople String[] @default([]) @map("present_people")
+  actionReport  String   @map("action_report")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  attendees CollectiveInterventionAttendee[]
+
+  @@map("collective_interventions")
+}
+
+model CollectiveInterventionAttendee {
+  id                       String                 @id @default(uuid())
+  collectiveInterventionId String                 @map("collective_intervention_id")
+  participantType          String                 @map("participant_type")
+  name                     String
+  role                     String?
+  course                   String?
+  unit                     String?
+  isEmployed               Boolean?               @map("is_employed")
+  workplace                String?
+  lgpdConsent              Boolean                @default(true) @map("lgpd_consent")
+  registeredAt             DateTime               @default(now()) @map("registered_at")
+  collectiveIntervention   CollectiveIntervention @relation(fields: [collectiveInterventionId], references: [id], onDelete: Cascade)
+
+  @@index([collectiveInterventionId])
+  @@map("collective_intervention_attendees")
+}
+
+model CourseTypeEntity {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  courses   Course[]
+
+  @@map("course_types")
+}
+
+model Course {
+  id           String            @id @default(uuid())
+  name         String            @unique
+  unitId       String?           @map("unit_id")
+  courseTypeId String?           @map("course_type_id")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+  unit         Unit?             @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  courseType   CourseTypeEntity? @relation(fields: [courseTypeId], references: [id], onDelete: SetNull)
+
+  @@index([unitId])
+  @@index([courseTypeId])
+  @@map("courses")
+}
+
+model Unit {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  courses   Course[]
+
+  @@map("units")
+}
+
